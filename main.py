@@ -47,14 +47,7 @@ class Snake:
             head = self.snake_body[-1]
             self.snake_body.pop(0)
 
-            if self.snake_way == Move.right.name:
-                self.snake_body.append([head[0] + 10, head[1]])
-            elif self.snake_way == Move.left.name:
-                self.snake_body.append([head[0] - 10, head[1]])
-            elif self.snake_way == Move.down.name:
-                self.snake_body.append([head[0], head[1] + 10])
-            else:
-                self.snake_body.append([head[0], head[1] - 10])
+            self.change_head(head)
 
         for i in self.snake_body:
             # paint snake
@@ -90,16 +83,19 @@ class Snake:
             for j in range(21):
                 for p in range(21):
                     if i[0] <= snake_head[0] + j <= i[0]+10 and i[1] <= snake_head[1] + p <= i[1]+10:
-                        if self.snake_way == Move.right.name:
-                            self.snake_body.append([snake_head[0] + 10, snake_head[1]])
-                        elif self.snake_way == Move.left.name:
-                            self.snake_body.append([snake_head[0] - 10, snake_head[1]])
-                        elif self.snake_way == Move.down.name:
-                            self.snake_body.append([snake_head[0], snake_head[1] + 10])
-                        else:
-                            self.snake_body.append([snake_head[0], snake_head[1] - 10])
+                        self.change_head(snake_head)
                         self.draw_snake(was_change=True)
                         return food_points.index(i)
+
+    def change_head(self, snake_head):
+        if self.snake_way == Move.right.name:
+            self.snake_body.append([snake_head[0] + 10, snake_head[1]])
+        elif self.snake_way == Move.left.name:
+            self.snake_body.append([snake_head[0] - 10, snake_head[1]])
+        elif self.snake_way == Move.down.name:
+            self.snake_body.append([snake_head[0], snake_head[1] + 10])
+        else:
+            self.snake_body.append([snake_head[0], snake_head[1] - 10])
 
 
 class Field:
@@ -129,7 +125,6 @@ class Field:
         if change_sn_move is not None:
             # change_sn_move
             self.snake.draw_snake(move=change_sn_move)
-            # self.snake.change_snake_body(change_sn_move)
         else:
             self.snake.draw_snake()
         # which food was eaten
