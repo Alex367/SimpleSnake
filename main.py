@@ -2,6 +2,7 @@ import sys
 import pygame
 import random
 import enum
+# import walls
 
 # field
 size = width, height = 600, 600
@@ -110,6 +111,8 @@ class Field:
         # create snake
         self.snake = Snake()
         self.score = 0
+        # wall
+        # self.wall = walls.Wall()
 
     def draw_field(self, change_sn_move):
         # draw field
@@ -121,6 +124,9 @@ class Field:
         else:
             # create a new food again
             self.create_food()
+        # # wall
+        # if self.score > 3:
+        #     self.wall.draw_wall()
         # draw snake
         if change_sn_move is not None:
             # change_sn_move
@@ -137,7 +143,7 @@ class Field:
                     del self.food_points[eaten]
                     self.score += 1
                     break
-        # print score
+        # score
         self.draw_score()
 
     def create_food(self):
@@ -182,26 +188,14 @@ def start_game():
             if event.type == pygame.QUIT:
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_DOWN:
-                    if prev_move == Move.up.name:
-                        break
-                    else:
-                        move_snake = prev_move = Move.down.name
-                elif event.key == pygame.K_UP:
-                    if prev_move == Move.down.name:
-                        break
-                    else:
-                        move_snake = prev_move = Move.up.name
-                elif event.key == pygame.K_RIGHT:
-                    if prev_move == Move.left.name:
-                        break
-                    else:
-                        move_snake = prev_move = Move.right.name
-                elif event.key == pygame.K_LEFT:
-                    if prev_move == Move.right.name:
-                        break
-                    else:
-                        move_snake = prev_move = Move.left.name
+                if event.key == pygame.K_DOWN and prev_move != Move.up.name:
+                    move_snake = prev_move = Move.down.name
+                elif event.key == pygame.K_UP and prev_move != Move.down.name:
+                    move_snake = prev_move = Move.up.name
+                elif event.key == pygame.K_RIGHT and prev_move != Move.left.name:
+                    move_snake = prev_move = Move.right.name
+                elif event.key == pygame.K_LEFT and prev_move != Move.right.name:
+                    move_snake = prev_move = Move.left.name
 
         screen.fill(black)
         create_field.draw_field(move_snake)
