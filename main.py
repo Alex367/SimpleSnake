@@ -1,102 +1,10 @@
 import sys
-import pygame
-import random
-import enum
-# import walls
-
-# field
-size = width, height = 600, 600
-black = 0, 0, 0
-green = 0, 255, 0
-red = 225, 0, 0
-purple = 218, 112, 214
-# yellow = 240, 230, 140
-field_width = field_height = 500
-left_margin_field = top_margin_field = 50
-# food
-cnt_food = 3
-food = pygame.image.load('strawberry_new1.png')
-# coordinate
-max_x = 100
-max_y = 450
-# snake
-width_snake = height_snake = 20
-
-pygame.init()
-screen = pygame.display.set_mode(size)
-pygame.display.set_caption('SimpleSnake')
-clock = pygame.time.Clock()
-
-
-class Move(enum.Enum):
-    right = 0
-    left = 1
-    up = 2
-    down = 3
-
-
-class Snake:
-    def __init__(self):
-        self.snake_body = [[100, 80], ]
-        self.snake_way = Move.right.name
-
-    def draw_snake(self, move=None, was_change=False):
-        if move is not None:
-            self.snake_way = move
-        if was_change is False:
-            # create a new head and remove an old tail
-            head = self.snake_body[-1]
-            self.snake_body.pop(0)
-
-            self.change_head(head)
-
-        for i in self.snake_body:
-            # paint snake
-            head = self.snake_body[-1]
-            if i[0] == head[0] and i[1] == head[1]:
-                pygame.draw.rect(screen, red, [i[0], i[1], width_snake, height_snake])
-            else:
-                pygame.draw.rect(screen, purple, [i[0], i[1], width_snake, height_snake])
-
-        clock.tick(20)
-        pygame.display.update()
-        self.check_crash()
-
-    def check_crash(self):
-        head = self.snake_body[-1]
-        # border crash
-        for i in range(21):
-            if head[0] + i > field_width + left_margin_field-10 or head[0] + i <= 50 or \
-                    head[1] + i > field_height + top_margin_field-10 or head[1] + i <= 50:
-                sys.exit()
-
-        # snake itself crash
-        if len(self.snake_body) > 3:
-            body = self.snake_body[:-3]
-            for i in body:
-                for j in range(21):
-                    if i[0] < head[0] + j < i[0] + 10 and i[1] < head[1] + j < i[1] + 10:
-                        sys.exit()
-
-    def lunch_time_snake(self, food_points):
-        snake_head = self.snake_body[-1]
-        for i in food_points:
-            for j in range(21):
-                for p in range(21):
-                    if i[0] <= snake_head[0] + j <= i[0]+10 and i[1] <= snake_head[1] + p <= i[1]+10:
-                        self.change_head(snake_head)
-                        self.draw_snake(was_change=True)
-                        return food_points.index(i)
-
-    def change_head(self, snake_head):
-        if self.snake_way == Move.right.name:
-            self.snake_body.append([snake_head[0] + 10, snake_head[1]])
-        elif self.snake_way == Move.left.name:
-            self.snake_body.append([snake_head[0] - 10, snake_head[1]])
-        elif self.snake_way == Move.down.name:
-            self.snake_body.append([snake_head[0], snake_head[1] + 10])
-        else:
-            self.snake_body.append([snake_head[0], snake_head[1] - 10])
+from snake_obj import Snake
+from game_object import (black, green,
+                         left_margin_field, top_margin_field,
+                         field_width, field_height, Move, itertools,
+                         pygame, screen, Food, Wall, cnt_food, cnt_wall,
+                         wall_width, wall_height)
 
 
 class Field:
@@ -104,37 +12,39 @@ class Field:
         self.field_color = color
         self.field_size = field_size
         self.field_border = border
+        self.score = 0
+        # create wall
+        self.list_wall = []
+        self.wall_points = []
+        # create food
         self.list_food = []
         self.food_points = []
-        # create food
         self.create_food()
         # create snake
         self.snake = Snake()
-        self.score = 0
-        # wall
-        # self.wall = walls.Wall()
 
     def draw_field(self, change_sn_move):
         # draw field
         pygame.draw.rect(screen, self.field_color, self.field_size, self.field_border)
+        # wall
+        if self.score > 2:
+            if len(self.list_wall) == 0:
+                self.create_wall()
+            for i in self.list_wall:
+                i.draw_wall()
         # draw food, check food's object existence
-        if self.list_food:
-            for i in self.list_food:
-                i.draw_food()
-        else:
-            # create a new food again
+        if len(self.list_food) == 0:
             self.create_food()
-        # # wall
-        # if self.score > 3:
-        #     self.wall.draw_wall()
+        for i in self.list_food:
+            i.draw_food()
         # draw snake
         if change_sn_move is not None:
             # change_sn_move
-            self.snake.draw_snake(move=change_sn_move)
+            self.snake.draw_snake(self.wall_points, move=change_sn_move)
         else:
-            self.snake.draw_snake()
+            self.snake.draw_snake(self.wall_points)
         # which food was eaten
-        eaten = self.snake.lunch_time_snake(self.food_points)
+        eaten = self.snake.lunch_snake(self.food_points)
 
         if eaten is not None:
             for i in self.list_food:
@@ -147,35 +57,81 @@ class Field:
         self.draw_score()
 
     def create_food(self):
-        for i in range(cnt_food):
+        i = 0
+        while i < cnt_food:
             x = Food()
-            self.list_food.append(x)
-            # write coordinate of food
-            self.food_points.append(x.get_food_coord())
+            if len(self.wall_points) > 0:
+                # when Wall is done and we need some foods
+                if self.compare_food_wall(x):
+                    self.list_food.append(x)
+                    # write coordinate of food
+                    self.food_points.append(x.get_coord())
+                    i += 1
+                else:
+                    del x
+            else:
+                self.list_food.append(x)
+                self.food_points.append(x.get_coord())
+                i += 1
+
+    def create_wall(self):
+        i = 0
+        while i < cnt_wall:
+            w = Wall()
+            self.list_wall.append(w)
+            if len(self.list_wall) > 1:
+                if self.compare_walls_coord() == 0:
+                    # print('del')
+                    self.list_wall.pop()
+                    del w
+                    continue
+            if self.compare_wall_snake(i) == 0:
+                self.list_wall.pop()
+                del w
+                continue
+            self.wall_points.append(w.get_coord())
+            i += 1
+        print(self.wall_points)
+
+    def compare_wall_snake(self, index_wall):
+        snake_coord = self.snake.get_snake_coord()
+        for i, j in enumerate(self.list_wall):
+            if i == index_wall:
+                for z in snake_coord:
+                    if (j.x - 100 < z[0] < j.x + wall_width + 50 or
+                        j.x - 100 < z[0] + 20 < j.x + wall_width + 50) and\
+                            (j.y - 100 < z[1] < j.y + wall_height + 50 or
+                             j.y - 100 < z[1] + 20 < j.y + wall_height + 50):
+                        # print('del')
+                        return 0
+        return 1
+
+    def compare_walls_coord(self):
+        for i, j in itertools.combinations(self.list_wall, 2):
+            # print('first ', i.x, i.y)
+            # print('sec ', j.x, j.y)
+            if (i.x < j.x < i.x + wall_width + 5 or
+                i.x < j.x + wall_width < i.x + wall_width + 5) and\
+                    (i.y < j.y < i.y + wall_height + 5 or
+                     i.y < j.y + wall_height < i.y + wall_height + 5):
+                # print('wa')
+                return 0
+        return 1
+
+    def compare_food_wall(self, f_points):
+        for j in self.wall_points:
+            if (j[0] - 20 < f_points.x < j[0] + wall_width + 20 or
+                j[0] - 20 < f_points.x + 10 < j[0] + wall_width + 20) and\
+                    (j[1] - 20 < f_points.y < j[1] + wall_height + 20 or
+                     j[1] - 20 < f_points.y + 10 < j[1] + wall_height + 20):
+                return 0
+        return 1
 
     def draw_score(self):
         font = pygame.font.Font('freesansbold.ttf', 18)
         text = font.render("Score: " + str(self.score), True, green)
         screen.blit(text, (300, 10))
         pygame.display.update()
-
-
-class Food:
-    def __init__(self):
-        self.x = None
-        self.y = None
-        self.coord = self.generate_coord()
-
-    def draw_food(self):
-        screen.blit(food, self.coord)
-
-    def get_food_coord(self):
-        return self.coord
-
-    def generate_coord(self):
-        self.x = random.randint(max_x, max_y)
-        self.y = random.randint(max_x, max_y)
-        return self.x, self.y
 
 
 def start_game():
