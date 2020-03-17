@@ -62,12 +62,11 @@ class Snake:
     def lunch_snake(self, food_points):
         snake_head = self.snake_body[-1]
         for i in food_points:
-            for j in range(21):
-                for p in range(21):
-                    if i[0] <= snake_head[0] + j <= i[0]+10 and i[1] <= snake_head[1] + p <= i[1]+10:
-                        self.change_head(snake_head)
-                        self.draw_snake(was_change=True)
-                        return food_points.index(i)
+            if (snake_head[0] < i[0] < snake_head[0] + 20 or snake_head[0] < i[0] + 10 < snake_head[0] + 20) and\
+                    (snake_head[1] < i[1] < snake_head[1] + 20 or snake_head[1] < i[1] + 10 < snake_head[1] + 20):
+                self.change_head(snake_head)
+                self.draw_snake(was_change=True)
+                return food_points.index(i)
 
     def change_head(self, snake_head):
         if self.snake_way == Move.right.name:

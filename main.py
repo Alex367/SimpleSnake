@@ -1,5 +1,5 @@
 import sys
-from snake_obj import Snake
+from snake_object import Snake
 from game_object import (black, green,
                          left_margin_field, top_margin_field,
                          field_width, field_height, Move,
