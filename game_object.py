@@ -1,7 +1,6 @@
 import random
 import enum
 import pygame
-import itertools
 
 min_coord = 100
 max_coord = 450
@@ -24,7 +23,10 @@ wall_height = 50
 food = pygame.image.load('strawberry_new1.png')
 
 pygame.init()
-screen = pygame.display.set_mode(size)
+infoObj = pygame.display.Info()
+display_width = infoObj.current_w
+display_height = infoObj.current_h
+screen = pygame.display.set_mode((display_width, display_height))
 pygame.display.set_caption('SimpleSnake')
 clock = pygame.time.Clock()
 
