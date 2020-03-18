@@ -1,2 +1,2 @@
 # SimpleSnake
-With library Pygame
+With Pygame
