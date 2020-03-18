@@ -4,7 +4,7 @@ from game_object import (black, green,
                          left_margin_field, top_margin_field,
                          field_width, field_height, Move,
                          pygame, screen, Food, Wall, cnt_food, cnt_wall,
-                         wall_width, wall_height)
+                         wall_width, compare_points)
 
 
 class Field:
@@ -64,7 +64,7 @@ class Field:
             if len(self.list_wall) > 0:
                 # when Wall is done and we need some foods
                 food_p = x.get_coord()
-                if self.compare_points(self.wall_points, food_p, 10, 20, 20) == 0:
+                if compare_points(self.wall_points, food_p, 10, 20, 20) == 0:
                     del x
                     continue
             self.list_food.append(x)
@@ -82,8 +82,7 @@ class Field:
                 second_w = w.get_coord()
                 first_w = self.wall_points[:-1]
                 # compare wall and wall
-                if self.compare_points(first_w, second_w, wall_width, 0, 5, tmp=True) == 0:
-                    # print('deleted wall 1')
+                if compare_points(first_w, second_w, wall_width, 0, 5, tmp=True) == 0:
                     self.remove_wall()
                     del w
                     continue
@@ -92,8 +91,7 @@ class Field:
                 i += 1
                 new_second_w = self.wall_points[-1:]
                 for z in snake_coord:
-                    if self.compare_points(new_second_w, z, 20, 100, 100) == 0:
-                        # print('deleted wall 2')
+                    if compare_points(new_second_w, z, 20, 100, 100) == 0:
                         self.remove_wall()
                         i -= 1
                         del w
@@ -103,25 +101,11 @@ class Field:
                 snake_coord = self.snake.get_snake_coord()
                 i += 1
                 for p in snake_coord:
-                    if self.compare_points(self.wall_points, p, 20, 100, 100) == 0:
-                        # print('deleted wall 3')
+                    if compare_points(self.wall_points, p, 20, 100, 100) == 0:
                         self.remove_wall()
                         i -= 1
                         del w
                         break
-
-    @staticmethod
-    def compare_points(w_points, f_points, center_margin_x, l_margin, r_margin, tmp=None):
-        center_margin_y = center_margin_x
-        if tmp:
-            center_margin_y = wall_height
-        for j in w_points:
-            if (j[0] - l_margin < f_points[0] < j[0] + wall_width + r_margin or
-                j[0] - l_margin < f_points[0] + center_margin_x < j[0] + wall_width + r_margin) and\
-                    (j[1] - l_margin < f_points[1] < j[1] + wall_height + r_margin or
-                     j[1] - l_margin < f_points[1] + center_margin_y < j[1] + wall_height + r_margin):
-                return 0
-        return 1
 
     def remove_wall(self):
         self.list_wall.pop()

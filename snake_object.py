@@ -1,8 +1,7 @@
 import sys
 from game_object import (Move, pygame, screen, red, purple, clock,
                          field_width, left_margin_field,
-                         field_height, top_margin_field,
-                         wall_width, wall_height)
+                         field_height, top_margin_field, compare_points)
 
 width_snake = height_snake = 20
 
@@ -19,7 +18,6 @@ class Snake:
             # create a new head and remove an old tail
             head = self.snake_body[-1]
             self.snake_body.pop(0)
-
             self.change_head(head)
 
         for i in self.snake_body:
@@ -52,18 +50,16 @@ class Snake:
 
         # wall crash
         if wall_points is not None:
-            for i in wall_points:
-                if (i[0] < head[0] < i[0] + wall_width or
-                    i[0] < head[0] + 20 < i[0] + wall_width) and \
-                        (i[1] < head[1] < i[1] + wall_height or
-                         i[1] < head[1] + 20 < i[1] + wall_height):
-                    sys.exit()
+            if compare_points(wall_points, head, 20, 0, 0) == 0:
+                sys.exit()
 
     def lunch_snake(self, food_points):
         snake_head = self.snake_body[-1]
         for i in food_points:
-            if (snake_head[0] < i[0] < snake_head[0] + 20 or snake_head[0] < i[0] + 10 < snake_head[0] + 20) and\
-                    (snake_head[1] < i[1] < snake_head[1] + 20 or snake_head[1] < i[1] + 10 < snake_head[1] + 20):
+            if (snake_head[0] < i[0] < snake_head[0] + 20 or
+                snake_head[0] < i[0] + 10 < snake_head[0] + 20) and\
+                    (snake_head[1] < i[1] < snake_head[1] + 20 or
+                     snake_head[1] < i[1] + 10 < snake_head[1] + 20):
                 self.change_head(snake_head)
                 self.draw_snake(was_change=True)
                 return food_points.index(i)

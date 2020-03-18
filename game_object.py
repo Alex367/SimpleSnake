@@ -1,6 +1,7 @@
 import random
 import enum
 import pygame
+import os
 
 min_coord = 100
 max_coord = 450
@@ -20,12 +21,14 @@ cnt_wall = 2
 wall_width = 100
 wall_height = 50
 
-food = pygame.image.load('strawberry_new1.png')
+base_path = os.path.dirname(__file__)
+strawberry_path = os.path.join(base_path, "strawberry_new1.png")
+food = pygame.image.load(strawberry_path)
 
 pygame.init()
-infoObj = pygame.display.Info()
-display_width = infoObj.current_w
-display_height = infoObj.current_h
+info_obj = pygame.display.Info()
+display_width = info_obj.current_w
+display_height = info_obj.current_h
 screen = pygame.display.set_mode((display_width, display_height))
 pygame.display.set_caption('SimpleSnake')
 clock = pygame.time.Clock()
@@ -62,3 +65,15 @@ class Wall(GameObject):
     def draw_wall(self):
         pygame.draw.rect(screen, yellow, [self.x, self.y, wall_width, wall_height])
 
+
+def compare_points(w_points, f_points, center_margin_x, l_margin, r_margin, tmp=None):
+    center_margin_y = center_margin_x
+    if tmp:
+        center_margin_y = wall_height
+    for j in w_points:
+        if (j[0] - l_margin < f_points[0] < j[0] + wall_width + r_margin or
+            j[0] - l_margin < f_points[0] + center_margin_x < j[0] + wall_width + r_margin) and\
+                (j[1] - l_margin < f_points[1] < j[1] + wall_height + r_margin or
+                 j[1] - l_margin < f_points[1] + center_margin_y < j[1] + wall_height + r_margin):
+            return 0
+    return 1
